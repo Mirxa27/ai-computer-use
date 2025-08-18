@@ -4,9 +4,26 @@ import Foundation
 class VoiceCommandProcessor {
     private let intentClassifier = IntentClassifier()
     private let entityExtractor = EntityExtractor()
+    private let systemController = SystemController.shared
     
     func processCommand(_ text: String) -> VoiceCommand {
         let normalizedText = normalize(text)
+        
+        // First check if it's a system command
+        if let systemCommand = systemController.parseVoiceCommand(text) {
+            // Create voice command with system intent
+            return VoiceCommand(
+                originalText: text,
+                normalizedText: normalizedText,
+                intent: Intent(type: .systemControl, confidence: 0.9),
+                entities: extractSystemEntities(from: systemCommand),
+                confidence: 0.9,
+                timestamp: Date(),
+                systemCommand: systemCommand
+            )
+        }
+        
+        // Otherwise process as regular command
         let intent = intentClassifier.classify(normalizedText)
         let entities = entityExtractor.extract(from: normalizedText)
         
@@ -16,8 +33,38 @@ class VoiceCommandProcessor {
             intent: intent,
             entities: entities,
             confidence: calculateConfidence(intent: intent, entities: entities),
-            timestamp: Date()
+            timestamp: Date(),
+            systemCommand: nil
         )
+    }
+    
+    private func extractSystemEntities(from command: SystemCommand) -> [Entity] {
+        var entities: [Entity] = []
+        
+        // Add category entity
+        entities.append(Entity(
+            type: .systemCategory,
+            value: "\(command.category)",
+            confidence: 1.0
+        ))
+        
+        // Add action entity
+        entities.append(Entity(
+            type: .systemAction,
+            value: "\(command.action)",
+            confidence: 1.0
+        ))
+        
+        // Add target entity
+        if !command.target.isEmpty {
+            entities.append(Entity(
+                type: .systemTarget,
+                value: command.target,
+                confidence: 0.9
+            ))
+        }
+        
+        return entities
     }
     
     private func normalize(_ text: String) -> String {
@@ -187,6 +234,7 @@ struct VoiceCommand {
     let entities: [Entity]
     let confidence: Double
     let timestamp: Date
+    var systemCommand: SystemCommand?
 }
 
 struct Intent {
@@ -201,6 +249,7 @@ enum IntentType: String {
     case changeProvider = "change_provider"
     case adjustSettings = "adjust_settings"
     case systemCommand = "system_command"
+    case systemControl = "system_control"
     case saveContext = "save_context"
     case loadContext = "load_context"
     case clearContext = "clear_context"
@@ -218,6 +267,9 @@ enum EntityType: String {
     case number = "number"
     case setting = "setting"
     case text = "text"
+    case systemCategory = "system_category"
+    case systemAction = "system_action"
+    case systemTarget = "system_target"
 }
 
 struct IntentPattern {

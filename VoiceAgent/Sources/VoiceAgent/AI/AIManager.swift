@@ -125,6 +125,29 @@ class AIManager: ObservableObject {
         case .clearContext:
             mcp.contextParameters.removeAll()
             
+        case .systemControl:
+            // Handle system control command
+            if let systemCommand = command.systemCommand {
+                do {
+                    let result = try await SystemController.shared.executeCommand(systemCommand)
+                    
+                    // Announce result
+                    let response = result.message
+                    NotificationCenter.default.post(
+                        name: .voiceResponseReady,
+                        object: nil,
+                        userInfo: ["response": response]
+                    )
+                } catch {
+                    let errorMessage = "Failed to execute system command: \(error.localizedDescription)"
+                    NotificationCenter.default.post(
+                        name: .voiceResponseReady,
+                        object: nil,
+                        userInfo: ["response": errorMessage]
+                    )
+                }
+            }
+            
         default:
             break
         }
