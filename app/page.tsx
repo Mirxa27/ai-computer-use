@@ -9,7 +9,7 @@ import { Input } from "@/components/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DeployButton, ProjectInfo } from "@/components/project-info";
-import { AISDKLogo } from "@/components/icons";
+import { MirxaKaliMark } from "@/components/icons";
 import { PromptSuggestions } from "@/components/prompt-suggestions";
 import {
   ResizableHandle,
@@ -17,6 +17,8 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ABORTED } from "@/lib/utils";
+import { useSettings, settingsToHeaders } from "@/lib/settings";
+import { getProvider } from "@/lib/providers";
 
 export default function Chat() {
   // Create separate refs for mobile and desktop to ensure both scroll properly
@@ -26,6 +28,9 @@ export default function Chat() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
+
+  const { settings, hydrated } = useSettings();
+  const providerLabel = hydrated ? getProvider(settings.provider).label : "";
 
   const {
     messages,
@@ -42,11 +47,12 @@ export default function Chat() {
     body: {
       sandboxId,
     },
-    maxSteps: 30,
+    headers: hydrated ? settingsToHeaders(settings) : undefined,
+    maxSteps: hydrated ? settings.maxSteps : 30,
     onError: (error) => {
       console.error(error);
       toast.error("There was an error", {
-        description: "Please try again later.",
+        description: error?.message || "Please try again later.",
         richColors: true,
         position: "top-center",
       });
@@ -215,10 +221,17 @@ export default function Chat() {
           <ResizablePanel
             defaultSize={30}
             minSize={25}
-            className="flex flex-col border-l border-zinc-200"
+            className="flex flex-col border-l border-zinc-800 bg-zinc-950"
           >
-            <div className="bg-white py-4 px-4 flex justify-between items-center">
-              <AISDKLogo />
+            <div className="bg-zinc-950 border-b border-zinc-800 py-3 px-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <MirxaKaliMark />
+                {hydrated && (
+                  <span className="hidden sm:inline-flex text-[11px] font-mono text-zinc-400 border border-zinc-800 rounded px-2 py-0.5">
+                    {providerLabel} · {settings.model}
+                  </span>
+                )}
+              </div>
               <DeployButton />
             </div>
 
@@ -247,7 +260,7 @@ export default function Chat() {
                 }
               />
             )}
-            <div className="bg-white">
+            <div className="bg-zinc-950 border-t border-zinc-800">
               <form onSubmit={handleSubmit} className="p-4">
                 <Input
                   handleInputChange={handleInputChange}
@@ -265,8 +278,15 @@ export default function Chat() {
 
       {/* Mobile View (Chat Only) */}
       <div className="w-full xl:hidden flex flex-col">
-        <div className="bg-white py-4 px-4 flex justify-between items-center">
-          <AISDKLogo />
+        <div className="bg-zinc-950 border-b border-zinc-800 py-3 px-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <MirxaKaliMark />
+            {hydrated && (
+              <span className="hidden sm:inline-flex text-[11px] font-mono text-zinc-400 border border-zinc-800 rounded px-2 py-0.5">
+                {providerLabel} · {settings.model}
+              </span>
+            )}
+          </div>
           <DeployButton />
         </div>
 
@@ -295,7 +315,7 @@ export default function Chat() {
             }
           />
         )}
-        <div className="bg-white">
+        <div className="bg-zinc-950 border-t border-zinc-800">
           <form onSubmit={handleSubmit} className="p-4">
             <Input
               handleInputChange={handleInputChange}

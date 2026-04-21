@@ -1,74 +1,69 @@
 import { motion } from "motion/react";
-import { VercelIcon } from "./icons";
-import { ComputerIcon } from "lucide-react";
 import Link from "next/link";
+import { Settings, Terminal, Cpu, Brain } from "lucide-react";
 
 export const ProjectInfo = () => {
   return (
-    <motion.div className="w-full px-4">
-      <div className="rounded-lg border-border border p-6 flex flex-col gap-4 text-center text-base dark:text-zinc-400">
-        <p className="flex flex-row justify-center gap-4 items-center text-zinc-900 dark:text-zinc-50">
-          <VercelIcon size={16} />
-          <span>+</span>
-          <ComputerIcon />
+    <motion.div className="w-full px-2 space-y-4">
+      <div className="rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-6 flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-cyan-400 text-sm font-mono">
+          <Terminal className="size-4" />
+          <span>root@mirxa-kali:~#</span>
+        </div>
+        <h3 className="text-2xl font-bold tracking-tight text-zinc-50">
+          MirXa Kali
+        </h3>
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          A next-generation AI agent that drives a real{" "}
+          <span className="text-cyan-400">Kali Linux</span> desktop. It can
+          click, type, run shell commands, and use the standard Kali tooling to
+          help you get work done — with{" "}
+          <span className="text-emerald-400">any model</span> from any provider.
         </p>
-        <h3 className="text-center text-2xl font-bold">Computer Use Agent</h3>
-        <p>
-          This demo showcases a Computer Use Agent built with the{" "}
-          <StyledLink href="https://sdk.vercel.ai">AI SDK</StyledLink>,{" "}
-          <StyledLink href="https://www.anthropic.com/claude/sonnet">
-            Anthropic Claude Sonnet 3.7
-          </StyledLink>
-          , and <StyledLink href="https://e2b.dev">e2b desktop</StyledLink>.
-        </p>
-        <p>
-          {" "}
-          Learn more about{" "}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+          <Feature icon={<Brain className="size-4" />} label="Multi-provider" />
+          <Feature icon={<Cpu className="size-4" />} label="Local Hugging Face models" />
+          <Feature icon={<Settings className="size-4" />} label="Fully configurable" />
+        </div>
+        <div className="pt-2">
           <Link
-            className="text-blue-500 dark:text-blue-400"
-            href="https://sdk.vercel.ai/docs/guides/computer-use"
-            target="_blank"
+            href="/settings"
+            className="text-cyan-400 hover:text-cyan-300 text-sm inline-flex items-center gap-1"
           >
-            Computer Use{" "}
+            <Settings className="size-3.5" /> Configure provider, model & local downloads →
           </Link>
-          with the AI SDK.
-        </p>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-const StyledLink = ({
-  children,
-  href,
+const Feature = ({
+  icon,
+  label,
 }: {
-  children: React.ReactNode;
-  href: string;
-}) => {
-  return (
-    <Link
-      className="text-blue-500 dark:text-blue-400"
-      href={href}
-      target="_blank"
-    >
-      {children}
-    </Link>
-  );
-};
+  icon: React.ReactNode;
+  label: string;
+}) => (
+  <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950/50 px-3 py-2 text-xs text-zinc-300">
+    <span className="text-cyan-400">{icon}</span>
+    <span>{label}</span>
+  </div>
+);
 
-// const Code = ({ text }: { text: string }) => {
-//   return <code className="">{text}</code>;
-// };
-
+/**
+ * Compact link to the settings page, shown in the chat header where the old
+ * Vercel "Deploy" button used to be. Keeping the export name avoids touching
+ * page.tsx layout.
+ */
 export const DeployButton = () => {
   return (
     <Link
-      target="_blank"
-      href={`https://vercel.com/new/clone?project-name=AI+SDK+Computer+Use+Demo&repository-name=ai-sdk-computer-use&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-computer-use&demo-title=AI+SDK+Computer+Use+Demo&demo-url=https%3A%2F%2Fai-sdk-computer-use.vercel.app%2F&demo-description=A+chatbot+application+built+with+Next.js+demonstrating+Anthropic+Claude+3.7+Sonnet%27s+computer+use+capabilities&env=ANTHROPIC_API_KEY,E2B_API_KEY`}
-      className="flex flex-row gap-2 items-center bg-zinc-900 px-3 py-2 rounded-md text-zinc-50 hover:bg-zinc-950 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-50"
+      href="/settings"
+      className="flex flex-row gap-2 items-center bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-md text-zinc-200 hover:bg-zinc-800 text-sm"
     >
-      <VercelIcon size={14} />
-      Deploy
+      <Settings className="size-3.5" />
+      Settings
     </Link>
   );
 };
