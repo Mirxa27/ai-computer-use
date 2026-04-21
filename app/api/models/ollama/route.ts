@@ -21,7 +21,8 @@
 const DEFAULT_OLLAMA = "http://localhost:11434";
 
 function stripTrailingSlashes(s: string): string {
-  // Avoid backtracking regex ReDoS on long strings of slashes.
+  // Manual scan instead of /\/+$/ to avoid any backtracking-regex ReDoS on
+  // pathological inputs with long runs of slashes.
   let end = s.length;
   while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
   return s.slice(0, end);
@@ -30,20 +31,21 @@ function stripTrailingSlashes(s: string): string {
 function isPrivateOrLoopback(hostname: string): boolean {
   const h = hostname.toLowerCase();
   if (h === "localhost" || h.endsWith(".localhost")) return true;
-  // IPv6 loopback and link-local
-  if (h === "::1" || h.startsWith("[::1") || h.startsWith("fe80:") || h.startsWith("[fe80:")) {
-    return true;
-  }
+  // IPv6 loopback only — explicitly NOT link-local (would expose cloud
+  // metadata endpoints like fe80::a9fe:a9fe).
+  if (h === "::1" || h === "[::1]") return true;
   // IPv4 dotted quad
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
   if (!m) return false;
   const [a, b] = [Number(m[1]), Number(m[2])];
   if ([a, b].some((n) => Number.isNaN(n) || n < 0 || n > 255)) return false;
-  if (a === 127) return true; // 127.0.0.0/8
-  if (a === 10) return true; // 10.0.0.0/8
-  if (a === 192 && b === 168) return true; // 192.168.0.0/16
-  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
-  if (a === 169 && b === 254) return true; // 169.254.0.0/16 (link-local)
+  if (a === 127) return true; // 127.0.0.0/8 (loopback)
+  if (a === 10) return true; // 10.0.0.0/8 (RFC1918)
+  if (a === 192 && b === 168) return true; // 192.168.0.0/16 (RFC1918)
+  if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12 (RFC1918)
+  // Deliberately exclude 169.254.0.0/16 — that range hosts cloud-provider
+  // instance metadata services (e.g. 169.254.169.254 on AWS/GCP/Azure) which
+  // we MUST NOT proxy to from a server-side fetch.
   return false;
 }
 
