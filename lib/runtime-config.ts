@@ -1,13 +1,13 @@
 const FALLBACK_APP_URL = "http://localhost:3000";
 const FALLBACK_OLLAMA_URL = "http://localhost:11434";
 
-function stripTrailingSlashes(value: string): string {
+function removeTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
 function readPublicEnv(name: string): string | undefined {
   const value = process.env[name]?.trim();
-  return value ? stripTrailingSlashes(value) : undefined;
+  return value ? removeTrailingSlashes(value) : undefined;
 }
 
 export const DEFAULT_APP_URL =

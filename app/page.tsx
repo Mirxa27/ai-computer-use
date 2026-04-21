@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DeployButton, ProjectInfo } from "@/components/project-info";
 import { MirxaKaliMark } from "@/components/icons";
 import { PromptSuggestions } from "@/components/prompt-suggestions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Download, Trash2 } from "lucide-react";
 import {
   ResizableHandle,
@@ -29,6 +30,7 @@ export default function Chat() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const { settings, hydrated } = useSettings();
   const providerLabel = hydrated ? getProvider(settings.provider).label : "";
@@ -113,10 +115,9 @@ export default function Chat() {
   };
 
   const clearConversation = () => {
-    if (!messages.length) return;
-    if (!window.confirm("Clear the current conversation?")) return;
     stopGeneration();
     setMessages([]);
+    setShowClearDialog(false);
     toast.success("Conversation cleared");
   };
 
@@ -131,6 +132,9 @@ export default function Chat() {
           method: "POST",
         }).catch((error) => {
           console.warn("Failed to clean up previous desktop:", error);
+          toast.warning("Previous desktop cleanup failed", {
+            description: "A fresh desktop will still be created.",
+          });
         });
       }
 
@@ -161,7 +165,7 @@ export default function Chat() {
       <Button
         variant="outline"
         size="sm"
-        onClick={clearConversation}
+        onClick={() => setShowClearDialog(true)}
         disabled={!messages.length}
       >
         <Trash2 className="size-4" />
@@ -395,6 +399,14 @@ export default function Chat() {
           </form>
         </div>
       </div>
+      <ConfirmDialog
+        open={showClearDialog}
+        title="Clear this conversation?"
+        description="This removes the current transcript from the chat panel so you can start a fresh task on the active desktop."
+        confirmLabel="Clear conversation"
+        onCancel={() => setShowClearDialog(false)}
+        onConfirm={clearConversation}
+      />
     </div>
   );
 }
