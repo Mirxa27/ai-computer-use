@@ -7,6 +7,7 @@ import {
   PROVIDERS,
   ProviderId,
 } from "./providers";
+import { DEFAULT_OLLAMA_URL } from "./runtime-config";
 
 /**
  * Per-user runtime settings. Stored in localStorage so users can configure
@@ -40,7 +41,7 @@ export const DEFAULT_SETTINGS: MirxaSettings = {
   apiKeys: {},
   baseUrls: {},
   hfToken: "",
-  ollamaUrl: "http://localhost:11434",
+  ollamaUrl: DEFAULT_OLLAMA_URL,
   customInstructions: "",
   maxSteps: 30,
   temperature: 0.2,
@@ -155,6 +156,16 @@ export function useSettings() {
   useEffect(() => {
     setSettings(loadSettings());
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      setSettings(loadSettings());
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const update = useCallback((patch: Partial<MirxaSettings>) => {

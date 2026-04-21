@@ -1,3 +1,5 @@
+import { DEFAULT_OLLAMA_API_URL } from "./runtime-config";
+
 /**
  * Provider/model registry for MirXa Kali.
  *
@@ -134,7 +136,7 @@ export const PROVIDERS: ProviderInfo[] = [
     apiKeyEnv: "OLLAMA_API_KEY",
     apiKeyLabel: "Ollama API key (optional)",
     supportsComputerUseTool: false,
-    defaultBaseUrl: "http://localhost:11434/v1",
+    defaultBaseUrl: DEFAULT_OLLAMA_API_URL,
     baseUrlConfigurable: true,
     models: [
       { id: "llama3.2-vision:11b", label: "Llama 3.2 Vision 11B", vision: true, small: true },

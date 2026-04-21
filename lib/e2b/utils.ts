@@ -53,6 +53,6 @@ export const getDesktopURL = async (id?: string) => {
 };
 
 export const killDesktop = async (id: string = "desktop") => {
-  const desktop = await getDesktop(id);
+  const desktop = await Sandbox.connect(id);
   await desktop.kill();
 };
