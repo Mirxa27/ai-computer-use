@@ -58,7 +58,7 @@ export const killDesktop = async (id: string = "desktop") => {
     await desktop.kill();
     return true;
   } catch (error) {
-    console.warn(`Skipping desktop cleanup for ${id}:`, error);
+    console.warn("Skipping desktop cleanup", { sandboxId: id, error });
     return false;
   }
 };
