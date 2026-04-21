@@ -129,7 +129,9 @@ export default function Chat() {
       if (sandboxId) {
         await fetch(`/api/kill-desktop?sandboxId=${encodeURIComponent(sandboxId)}`, {
           method: "POST",
-        }).catch(() => undefined);
+        }).catch((error) => {
+          console.warn("Failed to clean up previous desktop:", error);
+        });
       }
 
       const { streamUrl: nextStreamUrl, id } = await getDesktopURL();
