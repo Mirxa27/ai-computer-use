@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   DEFAULT_MODEL,
   DEFAULT_PROVIDER,
+  PROVIDERS,
   ProviderId,
 } from "./providers";
 
@@ -47,13 +48,78 @@ export const DEFAULT_SETTINGS: MirxaSettings = {
 
 const STORAGE_KEY = "mirxa-kali-settings-v1";
 
+const VALID_PROVIDER_IDS = new Set<ProviderId>(PROVIDERS.map((p) => p.id));
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function sanitizeProviderMap(
+  value: unknown,
+): Partial<Record<ProviderId, string>> {
+  if (!isRecord(value)) return {};
+  const sanitized: Partial<Record<ProviderId, string>> = {};
+  for (const [key, mapValue] of Object.entries(value)) {
+    if (
+      VALID_PROVIDER_IDS.has(key as ProviderId) &&
+      typeof mapValue === "string"
+    ) {
+      sanitized[key as ProviderId] = mapValue;
+    }
+  }
+  return sanitized;
+}
+
+/**
+ * Coerce arbitrary JSON read from localStorage into a valid `MirxaSettings`.
+ * Falls back to defaults for any field that is missing, malformed, or — in
+ * the case of `provider`/`model` — references an entry that no longer exists
+ * in the registry. Without this, a stale or hand-edited storage entry would
+ * crash the app the next time `getProvider(settings.provider)` was called.
+ */
+function sanitizeSettings(value: unknown): MirxaSettings {
+  if (!isRecord(value)) return DEFAULT_SETTINGS;
+
+  const provider: ProviderId = VALID_PROVIDER_IDS.has(value.provider as ProviderId)
+    ? (value.provider as ProviderId)
+    : DEFAULT_PROVIDER;
+  const providerWasReset = provider !== value.provider;
+
+  return {
+    provider,
+    model:
+      !providerWasReset && typeof value.model === "string" && value.model.length > 0
+        ? value.model
+        : DEFAULT_MODEL,
+    apiKeys: sanitizeProviderMap(value.apiKeys),
+    baseUrls: sanitizeProviderMap(value.baseUrls),
+    hfToken:
+      typeof value.hfToken === "string" ? value.hfToken : DEFAULT_SETTINGS.hfToken,
+    ollamaUrl:
+      typeof value.ollamaUrl === "string" && value.ollamaUrl.length > 0
+        ? value.ollamaUrl
+        : DEFAULT_SETTINGS.ollamaUrl,
+    customInstructions:
+      typeof value.customInstructions === "string"
+        ? value.customInstructions
+        : DEFAULT_SETTINGS.customInstructions,
+    maxSteps:
+      typeof value.maxSteps === "number" && Number.isFinite(value.maxSteps)
+        ? Math.max(1, Math.min(100, Math.floor(value.maxSteps)))
+        : DEFAULT_SETTINGS.maxSteps,
+    temperature:
+      typeof value.temperature === "number" && Number.isFinite(value.temperature)
+        ? Math.max(0, Math.min(2, value.temperature))
+        : DEFAULT_SETTINGS.temperature,
+  };
+}
+
 export function loadSettings(): MirxaSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    const parsed = JSON.parse(raw) as Partial<MirxaSettings>;
-    return { ...DEFAULT_SETTINGS, ...parsed };
+    return sanitizeSettings(JSON.parse(raw));
   } catch {
     return DEFAULT_SETTINGS;
   }

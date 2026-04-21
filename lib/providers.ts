@@ -30,6 +30,10 @@ export interface ModelInfo {
   /** Best-effort hint that this is a "small" model and should use the
    * compact/fallback tool set + tighter prompts. */
   small?: boolean;
+  /** Explicitly opt this model into the Anthropic computer-use beta tools.
+   * Only set this for Anthropic models that Anthropic has confirmed support
+   * `computer_20250124`. */
+  computerUse?: boolean;
 }
 
 export interface ProviderInfo {
@@ -55,8 +59,8 @@ export const PROVIDERS: ProviderInfo[] = [
     apiKeyLabel: "Anthropic API key",
     supportsComputerUseTool: true,
     models: [
-      { id: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet (computer use)", vision: true },
-      { id: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet v2 (computer use)", vision: true },
+      { id: "claude-3-7-sonnet-20250219", label: "Claude 3.7 Sonnet (computer use)", vision: true, computerUse: true },
+      { id: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet v2 (computer use)", vision: true, computerUse: true },
       { id: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", small: true },
     ],
   },
@@ -179,13 +183,17 @@ export function getModel(providerId: ProviderId, modelId: string): ModelInfo {
 
 /**
  * Decides whether to use the Anthropic computer-use beta tools or our generic
- * cross-provider tool set. Computer use is only valid on Anthropic models that
- * are explicitly listed as supporting it.
+ * cross-provider tool set. Computer use is only enabled for Anthropic models
+ * that are explicitly opted in via `ModelInfo.computerUse = true` in the
+ * registry above. Unknown / typo'd / future model ids therefore default to
+ * the safe generic tool set.
  */
 export function shouldUseComputerUseTool(
   providerId: ProviderId,
   modelId: string,
 ): boolean {
   if (providerId !== "anthropic") return false;
-  return /claude-3-(5|7)-sonnet/.test(modelId);
+  const provider = PROVIDERS.find((p) => p.id === providerId);
+  const model = provider?.models.find((m) => m.id === modelId);
+  return model?.computerUse === true;
 }

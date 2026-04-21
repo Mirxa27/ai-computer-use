@@ -261,8 +261,10 @@ export default function SettingsPage() {
                 placeholder={`set ${provider.apiKeyEnv} on the server, or paste a key here`}
               />
               <p className="text-xs text-zinc-500">
-                Stored in your browser only. Sent to <code>/api/chat</code> as
-                an <code>x-mirxa-api-key</code> header for this session.
+                Stored locally in this browser and may persist across reloads
+                and future visits until you clear it. Sent to{" "}
+                <code>/api/chat</code> as an{" "}
+                <code>x-mirxa-api-key</code> header.
               </p>
             </div>
 
