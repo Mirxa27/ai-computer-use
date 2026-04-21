@@ -25,6 +25,8 @@
 - **Settings page** at `/settings` — provider, model, API keys, base URLs,
   custom instructions, temperature, max steps. Everything is stored in your
   browser; nothing is persisted server-side.
+- **Session controls** — export the live transcript as JSON, clear the current
+  chat, and rotate into a brand-new desktop session without refreshing.
 - **Modern dark UI** — Kali-themed accents, live model badge in the chat
   header, advanced view of every tool call.
 
@@ -76,6 +78,35 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000), then visit `/settings` to
 choose your provider and model.
 
+## One-command Docker startup
+
+MirXa Kali now includes a production Docker image, a health endpoint, and a
+Compose stack for quick local startup.
+
+### App only
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+### App + local Ollama
+
+```bash
+cp .env.example .env
+docker compose --profile ollama up --build
+```
+
+This starts:
+
+- `app` on [http://localhost:3000](http://localhost:3000)
+- optional `ollama` on `http://localhost:11434`
+- a health check at `/api/health`
+
+For Docker-based Ollama, the compose file defaults
+`NEXT_PUBLIC_DEFAULT_OLLAMA_URL` to `http://ollama:11434` so the app container
+can reach the bundled Ollama service.
+
 ## Using local Hugging Face models
 
 1. Install [Ollama](https://ollama.com/) and start it (`ollama serve`).
@@ -94,6 +125,7 @@ vision models (Qwen 2.5 VL, LLaVA, Llama 3.2 Vision) can drive the desktop.
 app/
   api/
     chat/route.ts            # multi-provider streaming endpoint
+    health/route.ts          # container / orchestrator health check
     kill-desktop/            # graceful sandbox teardown
     models/
       huggingface/           # HF Hub model search proxy
@@ -104,11 +136,14 @@ lib/
   agent-prompt.ts            # Kali-aware system prompt
   model-factory.ts           # provider -> LanguageModelV1
   providers.ts               # provider/model registry
+  runtime-config.ts          # public runtime defaults
   settings.ts                # client-side settings + localStorage
   e2b/
     tool.ts                  # Anthropic computer-use tools
     generic-tools.ts         # cross-provider screenshot/click/type/... tools
     utils.ts                 # sandbox lifecycle (uses E2B_TEMPLATE_ID)
+Dockerfile                   # production Next.js container image
+docker-compose.yml           # one-command app / Ollama startup
 e2b.Dockerfile               # Kali Linux + XFCE desktop template
 e2b.toml                     # e2b template config
 ```

@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { DeployButton, ProjectInfo } from "@/components/project-info";
 import { MirxaKaliMark } from "@/components/icons";
 import { PromptSuggestions } from "@/components/prompt-suggestions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Download, Trash2 } from "lucide-react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -28,6 +30,7 @@ export default function Chat() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [sandboxId, setSandboxId] = useState<string | null>(null);
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const { settings, hydrated } = useSettings();
   const providerLabel = hydrated ? getProvider(settings.provider).label : "";
@@ -90,19 +93,87 @@ export default function Chat() {
 
   const isLoading = status !== "ready";
 
-  const refreshDesktop = async () => {
+  const exportConversation = () => {
+    if (!messages.length) return;
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      provider: settings.provider,
+      model: settings.model,
+      sandboxId,
+      messages,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mirxa-kali-session-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("Conversation exported");
+  };
+
+  const clearConversation = () => {
+    stopGeneration();
+    setMessages([]);
+    setShowClearDialog(false);
+    toast.success("Conversation cleared");
+  };
+
+  const createNewDesktop = async () => {
     try {
+      stopGeneration();
       setIsInitializing(true);
-      const { streamUrl, id } = await getDesktopURL(sandboxId || undefined);
-      // console.log("Refreshed desktop connection with ID:", id);
-      setStreamUrl(streamUrl);
+      setStreamUrl(null);
+
+      if (sandboxId) {
+        await fetch(`/api/kill-desktop?sandboxId=${encodeURIComponent(sandboxId)}`, {
+          method: "POST",
+        }).catch((error) => {
+          console.warn("Failed to clean up previous desktop:", error);
+          toast.warning("Previous desktop cleanup failed", {
+            description: "A fresh desktop will still be created.",
+          });
+        });
+      }
+
+      const { streamUrl: nextStreamUrl, id } = await getDesktopURL();
+      setMessages([]);
+      setStreamUrl(nextStreamUrl);
       setSandboxId(id);
+      toast.success("Started a new desktop");
     } catch (err) {
-      console.error("Failed to refresh desktop:", err);
+      console.error("Failed to create desktop:", err);
+      toast.error("Failed to create a new desktop");
     } finally {
       setIsInitializing(false);
     }
   };
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={exportConversation}
+        disabled={!messages.length}
+      >
+        <Download className="size-4" />
+        <span className="hidden sm:inline">Export</span>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowClearDialog(true)}
+        disabled={!messages.length}
+      >
+        <Trash2 className="size-4" />
+        <span className="hidden sm:inline">Clear</span>
+      </Button>
+      <DeployButton />
+    </div>
+  );
 
   // Kill desktop on page close
   useEffect(() => {
@@ -199,7 +270,7 @@ export default function Chat() {
                   allow="autoplay"
                 />
                 <Button
-                  onClick={refreshDesktop}
+                  onClick={createNewDesktop}
                   className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white px-3 py-1 rounded text-sm z-10"
                   disabled={isInitializing}
                 >
@@ -232,7 +303,7 @@ export default function Chat() {
                   </span>
                 )}
               </div>
-              <DeployButton />
+              {headerActions}
             </div>
 
             <div
@@ -287,7 +358,7 @@ export default function Chat() {
               </span>
             )}
           </div>
-          <DeployButton />
+          {headerActions}
         </div>
 
         <div
@@ -328,6 +399,14 @@ export default function Chat() {
           </form>
         </div>
       </div>
+      <ConfirmDialog
+        open={showClearDialog}
+        title="Clear this conversation?"
+        description="This removes the current transcript from the chat panel so you can start a fresh task on the active desktop."
+        confirmLabel="Clear conversation"
+        onCancel={() => setShowClearDialog(false)}
+        onConfirm={clearConversation}
+      />
     </div>
   );
 }
