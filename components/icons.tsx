@@ -1,5 +1,34 @@
 import Link from "next/link";
 
+/**
+ * MirXa Kali brand mark — a compact dragon-tail "M" rendered in the Kali
+ * accent blue. Used in the chat header and on /settings.
+ */
+export const MirxaKaliMark = () => {
+  return (
+    <Link href="/" className="flex items-center gap-2 group">
+      <div className="size-7 rounded-md bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_12px_rgba(34,211,238,0.45)]">
+        <svg
+          viewBox="0 0 24 24"
+          width={18}
+          height={18}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-zinc-950"
+        >
+          <path d="M3 19V5l9 9 9-9v14" />
+        </svg>
+      </div>
+      <span className="font-semibold tracking-tight text-zinc-100 group-hover:text-white">
+        MirXa<span className="text-cyan-400"> Kali</span>
+      </span>
+    </Link>
+  );
+};
+
 export const BotIcon = () => {
   return (
     <svg

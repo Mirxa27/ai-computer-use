@@ -1,0 +1,8 @@
+# MirXa Kali e2b template config.
+# Used by `e2b template build` together with e2b.Dockerfile.
+template_name = "mirxa-kali"
+dockerfile = "e2b.Dockerfile"
+cpu_count = 2
+memory_mb = 4096
+# The e2b desktop runtime exposes the noVNC stream on port 6080.
+ports = [6080]
