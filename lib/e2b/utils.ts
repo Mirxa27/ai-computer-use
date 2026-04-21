@@ -53,6 +53,12 @@ export const getDesktopURL = async (id?: string) => {
 };
 
 export const killDesktop = async (id: string = "desktop") => {
-  const desktop = await Sandbox.connect(id);
-  await desktop.kill();
+  try {
+    const desktop = await Sandbox.connect(id);
+    await desktop.kill();
+    return true;
+  } catch (error) {
+    console.warn(`Skipping desktop cleanup for ${id}:`, error);
+    return false;
+  }
 };
