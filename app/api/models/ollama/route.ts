@@ -18,12 +18,20 @@
  * arbitrary internet hosts or cloud metadata endpoints.
  */
 
+import { DEFAULT_OLLAMA_ALLOWED_HOSTS } from "@/lib/runtime-config";
 import { safeParseUrl, stripTrailingSlashes } from "@/lib/safe-url";
 
 const DEFAULT_OLLAMA = "http://localhost:11434";
 
+function parseSafeOllamaUrl(raw: string): URL | null {
+  const privateUrl = safeParseUrl(raw, { requirePrivate: true });
+  if (privateUrl) return privateUrl;
+  if (DEFAULT_OLLAMA_ALLOWED_HOSTS.length === 0) return null;
+  return safeParseUrl(raw, { allowedHosts: DEFAULT_OLLAMA_ALLOWED_HOSTS });
+}
+
 function safeOllamaBase(input: string | null | undefined): string | null {
-  const parsed = safeParseUrl(input || DEFAULT_OLLAMA, { requirePrivate: true });
+  const parsed = parseSafeOllamaUrl(input || DEFAULT_OLLAMA);
   if (!parsed) return null;
   // Users may paste an OpenAI-compatible base like `http://localhost:11434/v1`
   // (that's the URL the AI SDK uses to talk to Ollama). The native Ollama
@@ -37,10 +45,14 @@ function safeOllamaBase(input: string | null | undefined): string | null {
 }
 
 function badUrlResponse() {
+  const hostHint =
+    DEFAULT_OLLAMA_ALLOWED_HOSTS.length > 0
+      ? ` or match the configured Ollama host (${DEFAULT_OLLAMA_ALLOWED_HOSTS.join(", ")})`
+      : "";
   return new Response(
     JSON.stringify({
       error:
-        "Ollama URL must be an http(s) loopback or RFC1918 private address (e.g. http://localhost:11434).",
+        `Ollama URL must be an http(s) loopback or RFC1918 private address${hostHint} (e.g. http://localhost:11434).`,
     }),
     { status: 400, headers: { "Content-Type": "application/json" } },
   );

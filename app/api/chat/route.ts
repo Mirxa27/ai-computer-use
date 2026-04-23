@@ -15,6 +15,7 @@ import {
 } from "@/lib/providers";
 import { buildModel } from "@/lib/model-factory";
 import { buildSystemPrompt } from "@/lib/agent-prompt";
+import { DEFAULT_OLLAMA_ALLOWED_HOSTS } from "@/lib/runtime-config";
 import { safeParseUrl } from "@/lib/safe-url";
 
 export const maxDuration = 300;
@@ -52,8 +53,15 @@ function decode(v: string | null): string {
 function sanitizeBaseUrl(provider: ProviderId, raw: string): string {
   if (!raw) return "";
   if (provider === "ollama") {
-    // Ollama must be a private/loopback host.
-    return safeParseUrl(raw, { requirePrivate: true })?.toString() ?? "";
+    // Ollama must be private/loopback unless the deployer explicitly configured
+    // a different default host (for example a Docker Compose service name).
+    const privateUrl = safeParseUrl(raw, { requirePrivate: true });
+    if (privateUrl) return privateUrl.toString();
+    if (DEFAULT_OLLAMA_ALLOWED_HOSTS.length === 0) return "";
+    return (
+      safeParseUrl(raw, { allowedHosts: DEFAULT_OLLAMA_ALLOWED_HOSTS })?.toString() ??
+      ""
+    );
   }
   const allowed = BASE_URL_ALLOWED_HOSTS[provider];
   if (!allowed) return ""; // base URL is not user-configurable for this provider

@@ -5,14 +5,14 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-        NEXT_PUBLIC_DEFAULT_OLLAMA_URL: ${NEXT_PUBLIC_DEFAULT_OLLAMA_URL:-http://ollama:11434}
+        NEXT_PUBLIC_DEFAULT_OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://ollama:11434}
     env_file:
       - .env
     environment:
       NODE_ENV: production
       PORT: 3000
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      NEXT_PUBLIC_DEFAULT_OLLAMA_URL: ${NEXT_PUBLIC_DEFAULT_OLLAMA_URL:-http://ollama:11434}
+      NEXT_PUBLIC_DEFAULT_OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://ollama:11434}
     ports:
       - "3000:3000"
     restart: unless-stopped
