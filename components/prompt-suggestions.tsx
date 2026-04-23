@@ -3,30 +3,24 @@ import { Button } from "./ui/button";
 
 const suggestions = [
   {
-    text: "Get the latest Vercel blog post",
-    prompt: "Go to vercel.com/blog and get the latest post",
+    text: "scan a host with nmap",
+    prompt:
+      "Run `nmap -sV -T4 scanme.nmap.org` in the terminal and summarise the open ports for me.",
   },
-  // {
-  //   text: "search google for cute dogs",
-  //   prompt: "Launch browser and search Google for labradoodle puppies. Show me images.",
-  // },
   {
-    text: "Create a new text file",
-    prompt: "Open a text editor and create a new file called notes.txt and write 'we are so back!'",
+    text: "fingerprint a website",
+    prompt:
+      "Use whatweb to fingerprint https://example.com and tell me what stack it's running.",
   },
-  // {
-  //   text: "Check system memory usage",
-  //   prompt: "Run the top command to show system resource usage",
-  // },
   {
-    text: "Get the latest rauchg tweet",
-    prompt: "Go to twitter.com/rauchg and get the latest tweet",
+    text: "write & run a python script",
+    prompt:
+      "Open a terminal, write a Python 3 script that prints the first 10 Fibonacci numbers, and run it.",
   },
-  // {
-  //   text: "What do you see",
-  //   prompt:
-  //     "Capture a screenshot of the current screen and tell me what you see",
-  // },
+  {
+    text: "open firefox to a url",
+    prompt: "Launch Firefox and open https://www.kali.org/tools/ for me.",
+  },
 ];
 
 export const PromptSuggestions = ({
@@ -37,21 +31,18 @@ export const PromptSuggestions = ({
   disabled: boolean;
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-3 px-4">
+    <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
       {suggestions.map((suggestion, index) => (
         <Button
           key={index}
-          variant="pill"
-          size="pill"
+          variant="outline"
+          size="sm"
           onClick={() => submitPrompt(suggestion.prompt)}
           disabled={disabled}
+          className="border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
         >
-          <span>
-            <span className="text-black text-sm">
-              {suggestion.text.toLowerCase()}
-            </span>
-          </span>
-          <ArrowUpRight className="ml-1 h-2 w-2 sm:h-3 sm:w-3 text-zinc-500 group-hover:opacity-70" />
+          <span className="text-xs">{suggestion.text}</span>
+          <ArrowUpRight className="ml-1 h-3 w-3 text-cyan-400" />
         </Button>
       ))}
     </div>

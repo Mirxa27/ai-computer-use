@@ -1,83 +1,153 @@
-<a href="https://ai-sdk-starter-groq.vercel.app">
-  <h1 align="center">AI SDK Computer Use Demo</h1>
-</a>
+# MirXa Kali
 
-<p align="center">
-  An open-source AI chatbot app template demonstrating Anthropic Claude 3.7 Sonnet's computer use capabilities, built with Next.js and the AI SDK by Vercel.
-</p>
+> A next-generation AI agent that drives a real **Kali Linux** desktop. Plug in
+> any provider — Anthropic, OpenAI, Google Gemini, Groq, Mistral, OpenRouter,
+> a local Ollama server, or any model from Hugging Face — and let it click,
+> type, and run shell commands on your behalf.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running Locally</strong></a> ·
-  <a href="#authors"><strong>Authors</strong></a>
-</p>
-<br/>
+![MirXa Kali](public/opengraph-image.png)
 
-## Features
+## What's inside
 
-- Streaming text responses powered by the [AI SDK by Vercel](https://sdk.vercel.ai/docs), allowing multiple AI providers to be used interchangeably with just a few lines of code.
-- Integration with Anthropic Claude 3.7 Sonnet's computer use tool and bash tool capabilities.
-- Sandbox environment with [e2b](https://e2b.dev) for secure execution.
-- [shadcn/ui](https://ui.shadcn.com/) components for a modern, responsive UI powered by [Tailwind CSS](https://tailwindcss.com).
-- Built with the latest [Next.js](https://nextjs.org) App Router.
+- **Real Kali Linux desktop** — a custom [`e2b.Dockerfile`](./e2b.Dockerfile)
+  builds an XFCE-based `kali-rolling` image with the standard Kali tooling
+  (`nmap`, `whatweb`, `nikto`, `sqlmap`, `hydra`, `gobuster`, …) preinstalled.
+- **Multi-provider AI SDK** — Anthropic Claude (computer-use), OpenAI,
+  Google Gemini, Groq, Mistral, OpenRouter, Ollama, and the Hugging Face
+  Inference Router are all first-class. Per-request API keys.
+- **Small-model friendly** — non-Anthropic and small models use a compact,
+  cross-provider tool set (`screenshot`, `click`, `type`, `key`, `scroll`,
+  `drag`, `wait`, `bash`) defined with strict zod schemas, so even a 7B local
+  vision model can drive the desktop.
+- **Local model manager** — search Hugging Face from the **Settings** page and
+  pull any GGUF model into your local Ollama with one click
+  (`hf.co/<repo>` shorthand). Your HF token is forwarded for gated models.
+- **Settings page** at `/settings` — provider, model, API keys, base URLs,
+  custom instructions, temperature, max steps. Everything is stored in your
+  browser; nothing is persisted server-side.
+- **Session controls** — export the live transcript as JSON, clear the current
+  chat, and rotate into a brand-new desktop session without refreshing.
+- **Modern dark UI** — Kali-themed accents, live model badge in the chat
+  header, advanced view of every tool call.
 
-## Deploy Your Own
+## Getting started
 
-You can deploy your own version to Vercel by clicking the button below:
+### 1. Install
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?project-name=AI+SDK+Computer+Use+Demo&repository-name=ai-sdk-computer-use&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-sdk-computer-use&demo-title=AI+SDK+Computer+Use+Demo&demo-url=https%3A%2F%2Fai-sdk-computer-use.vercel.app%2F&demo-description=A+chatbot+application+built+with+Next.js+demonstrating+Anthropic+Claude+3.7+Sonnet%27s+computer+use+capabilities&env=ANTHROPIC_API_KEY,E2B_API_KEY)
+```bash
+npm install
+```
 
-## Running Locally
+### 2. Configure
 
-1. Clone the repository and install dependencies:
+Copy `.env.example` to `.env.local` and fill in the keys you want to use on the
+server. Anything you leave blank can still be entered per-session from the
+**Settings** page.
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
+```env
+E2B_API_KEY=...                # required
+E2B_TEMPLATE_ID=               # optional — set to your built Kali template id
 
-2. Install the [Vercel CLI](https://vercel.com/docs/cli):
+# Any of these are optional; users can also paste their own from /settings.
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
+GROQ_API_KEY=
+MISTRAL_API_KEY=
+OPENROUTER_API_KEY=
+HF_TOKEN=
+```
 
-   ```bash
-   npm i -g vercel
-   # or
-   yarn global add vercel
-   # or
-   pnpm install -g vercel
-   ```
+### 3. Build the Kali e2b template (recommended)
 
-   Once installed, link your local project to your Vercel project:
+```bash
+npm i -g @e2b/cli
+e2b auth login
+e2b template build --name mirxa-kali       # uses ./e2b.Dockerfile + ./e2b.toml
+```
 
-   ```bash
-   vercel link
-   ```
+The CLI prints a template id — put it in `.env.local` as `E2B_TEMPLATE_ID`.
+Without this, the app still runs but on the stock e2b Ubuntu desktop.
 
-   After linking, pull your environment variables:
+### 4. Run
 
-   ```bash
-   vercel env pull
-   ```
+```bash
+npm run dev
+```
 
-   This will create a `.env.local` file with all the necessary environment variables.
+Open [http://localhost:3000](http://localhost:3000), then visit `/settings` to
+choose your provider and model.
 
-3. Run the development server:
+## One-command Docker startup
 
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
+MirXa Kali now includes a production Docker image, a health endpoint, and a
+Compose stack for quick local startup.
 
-4. Open [http://localhost:3000](http://localhost:3000) to view your new AI chatbot application.
+### App only
 
-## Authors
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-This repository is maintained by the [Vercel](https://vercel.com) team and community contributors.
+### App + local Ollama
 
-Contributions are welcome! Feel free to open issues or submit pull requests to enhance functionality or fix bugs.
+```bash
+cp .env.example .env
+docker compose --profile ollama up --build
+```
+
+This starts:
+
+- `app` on [http://localhost:3000](http://localhost:3000)
+- optional `ollama` on `http://localhost:11434`
+- a health check at `/api/health`
+
+For Docker-based Ollama, the compose file defaults
+`NEXT_PUBLIC_DEFAULT_OLLAMA_URL` to `http://ollama:11434` so the app container
+can reach the bundled Ollama service.
+
+## Using local Hugging Face models
+
+1. Install [Ollama](https://ollama.com/) and start it (`ollama serve`).
+2. In **Settings → Local models**, enter your Ollama URL (defaults to
+   `http://localhost:11434`).
+3. Search Hugging Face from the same page and click **Pull** on any model —
+   MirXa Kali asks Ollama to download it as `hf.co/<repo>`.
+4. Switch the active provider to **Ollama (local)** and select the model.
+
+That's it — the agent will use the cross-provider tool set, so even small 7B
+vision models (Qwen 2.5 VL, LLaVA, Llama 3.2 Vision) can drive the desktop.
+
+## Project layout
+
+```
+app/
+  api/
+    chat/route.ts            # multi-provider streaming endpoint
+    health/route.ts          # container / orchestrator health check
+    kill-desktop/            # graceful sandbox teardown
+    models/
+      huggingface/           # HF Hub model search proxy
+      ollama/                # list / pull local models (HF GGUF supported)
+  page.tsx                   # chat + desktop stream
+  settings/page.tsx          # provider, model & local-model manager
+lib/
+  agent-prompt.ts            # Kali-aware system prompt
+  model-factory.ts           # provider -> LanguageModelV1
+  providers.ts               # provider/model registry
+  runtime-config.ts          # public runtime defaults
+  settings.ts                # client-side settings + localStorage
+  e2b/
+    tool.ts                  # Anthropic computer-use tools
+    generic-tools.ts         # cross-provider screenshot/click/type/... tools
+    utils.ts                 # sandbox lifecycle (uses E2B_TEMPLATE_ID)
+Dockerfile                   # production Next.js container image
+docker-compose.yml           # one-command app / Ollama startup
+e2b.Dockerfile               # Kali Linux + XFCE desktop template
+e2b.toml                     # e2b template config
+```
+
+## License
+
+MIT.
