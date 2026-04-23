@@ -103,9 +103,11 @@ This starts:
 - optional `ollama` on `http://localhost:11434`
 - a health check at `/api/health`
 
-For Docker-based Ollama, the compose file defaults
-`NEXT_PUBLIC_DEFAULT_OLLAMA_URL` to `http://ollama:11434` so the app container
-can reach the bundled Ollama service.
+For Docker-based Ollama, the compose file always points the app container at
+`http://ollama:11434` by default, even if your copied `.env` keeps
+`NEXT_PUBLIC_DEFAULT_OLLAMA_URL=http://localhost:11434` for local non-Docker
+development. If you need a different in-container Ollama address, set
+`DOCKER_OLLAMA_URL` in `.env`.
 
 ## Using local Hugging Face models
 
